@@ -14,10 +14,10 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define OLED_SCL 22
 
 // Spielfigur
-int x = 0;           // Startposition (x)
+int x = 0;           // aktuelle x-Position
 int y = 27;          // y bleibt konstant (mittig)
-const int size = 10; // Breite/Höhe der Figur
-const int speed = 2; // Schrittgröße pro Tastendruck
+const int size = 10; // Größe der Figur (Breite=Höhe)
+const int speed = 2; // Schrittweite pro Tastendruck
 
 void setup() {
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -35,14 +35,28 @@ void setup() {
 void loop() {
   int state = digitalRead(BUTTON_PIN);
 
-  // Wenn der Button gedrückt ist (LOW wegen INPUT_PULLUP)
   if (state == LOW) {
-    x = x + speed;   // Figur bewegt sich nach rechts
-    delay(50);       // kurze Pause (Entprellung)
+    // --- KOLLISIONS-PRUEFUNG RECHTS ---
+    // neue x-Position, wenn wir uns bewegen würden
+    int neuerX = x + speed;
+
+    // Rand-Bedingungen (nur rechts nötig in dieser Aufgabe)
+    bool rechter_rand_wuerde_ueberschritten =
+      (neuerX + size) > SCREEN_WIDTH; // rechte Figurkante > 128?
+
+    // Nur bewegen, wenn wir im Bild bleiben
+    if (!rechter_rand_wuerde_ueberschritten) {
+      x = neuerX;
+    } else {
+      // optional: exakt an den Rand "klemmen"
+      x = SCREEN_WIDTH - size;
+    }
+
+    delay(50); // kleine Entprellpause
   }
 
-  // Display aktualisieren
+  // Zeichnen
   display.clearDisplay();
-  display.fillRect(x, y, size, size, SSD1306_WHITE); // Figur zeichnen
+  display.fillRect(x, y, size, size, SSD1306_WHITE);
   display.display();
 }
