@@ -1,36 +1,42 @@
 #include <Arduino.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
-// Lichtsensor an GPIO32
-const int sensorPin = 32;
+// Displaygröße (Standard für 0.96" SSD1306)
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
 
-// Kalibrierung – hier ggf. eigene Werte einsetzen:
-// Wert bei hell (ohne Hand)
-const int maxWert = 2800;
-// Wert bei dunkel (Hand drauf oder abgedeckt)
-const int minWert = 0;
+// I²C-Pins am ESP32
+#define OLED_SDA 21
+#define OLED_SCL 22
+
+// Displayobjekt anlegen
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 void setup() {
+  // Serielle Schnittstelle zum Debuggen
   Serial.begin(9600);
-  Serial.println("Lichtsensor mit Prozentanzeige gestartet!");
+
+  // Display initialisieren
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("Fehler beim Initialisieren des Displays!");
+    for(;;); // stoppt das Programm, falls kein Display gefunden
+  }
+
+  // Bildschirm löschen
+  display.clearDisplay();
+
+  // Text-Einstellungen
+  display.setTextSize(2);             // Schriftgröße
+  display.setTextColor(SSD1306_WHITE);// Farbe (nur Weiß beim OLED)
+  display.setCursor(10, 25);          // Position (x, y)
+
+  // Text ausgeben
+  display.println("Hallo!");
+  display.display();                  // Anzeige aktualisieren
 }
 
 void loop() {
-  // Analogen Wert vom Sensor lesen
-  int sensorWert = analogRead(sensorPin);
-
-  // Den Messwert in Prozent umrechnen (0–100 %)
-  int helligkeit = map(sensorWert, minWert, maxWert, 0, 100);
-
-  // Werte außerhalb des Bereichs begrenzen
-  if (helligkeit < 0) helligkeit = 0;
-  if (helligkeit > 100) helligkeit = 100;
-
-  // Ausgabe im seriellen Monitor
-  Serial.print("Sensorwert: ");
-  Serial.print(sensorWert);
-  Serial.print(" -> Helligkeit: ");
-  Serial.print(helligkeit);
-  Serial.println("%");
-
-  delay(500);
+  // Hier passiert nichts weiter
 }
