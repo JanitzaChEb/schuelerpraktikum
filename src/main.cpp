@@ -1,51 +1,22 @@
 #include <Arduino.h>
 
-// LED an GPIO25
-const int ledPin = 25;
-
-// Button an GPIO33 (ein Bein an Pin, das andere an GND)
-const int buttonPin = 33;
-
-// Zustandsvariablen
-int lastState = HIGH;       // vorheriger Zustand des Buttons
-int currentState = HIGH;    // aktueller Zustand
-bool ledAn = false;         // merkt sich, ob LED gerade leuchtet
+// Lichtsensor an GPIO32 (analoger Eingang)
+const int sensorPin = 32;
 
 void setup() {
-  pinMode(ledPin, OUTPUT);
-  pinMode(buttonPin, INPUT_PULLUP);
-
-  // Serielle Verbindung starten (Baudrate 9600)
+  // Serielle Verbindung starten
   Serial.begin(9600);
-  Serial.println("Programm gestartet!");
+  Serial.println("Lichtsensor gestartet!");
 }
 
 void loop() {
-  // aktuellen Buttonzustand lesen
-  currentState = digitalRead(buttonPin);
+  // Analogen Wert vom Sensor lesen (0 bis 4095 beim ESP32)
+  int sensorWert = analogRead(sensorPin);
 
-  // Wenn sich der Zustand geändert hat
-  if (currentState != lastState) {
-    // Wenn Button gedrückt wurde (LOW)
-    if (currentState == LOW) {
-      ledAn = !ledAn; // LED-Zustand umschalten
-      digitalWrite(ledPin, ledAn ? HIGH : LOW);
+  // Wert im seriellen Monitor ausgeben
+  Serial.print("Helligkeitswert: ");
+  Serial.println(sensorWert);
 
-      // Zustände im seriellen Monitor ausgeben
-      Serial.print("Button gedrückt → LED ist jetzt: ");
-      Serial.println(ledAn ? "AN" : "AUS");
-    }
-
-    // kleine Pause zur Entprellung
-    delay(50);
-  }
-
-  // Debug-Ausgabe (optional): Zustände immer anzeigen
-  Serial.print("currentState: ");
-  Serial.print(currentState);
-  Serial.print(" | lastState: ");
-  Serial.println(lastState);
-
-  // Zustand für nächsten Durchlauf merken
-  lastState = currentState;
+  // kleine Pause, damit man die Werte besser lesen kann
+  delay(500);
 }
