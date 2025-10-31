@@ -13,50 +13,67 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define OLED_SDA 21
 #define OLED_SCL 22
 
-// Spielfigur
-int x = 0;           // aktuelle x-Position
-int y = 27;          // y bleibt konstant (mittig)
-const int size = 10; // Größe der Figur (Breite=Höhe)
-const int speed = 2; // Schrittweite pro Tastendruck
+// Spieler (Quadrat)
+int px = 0;            // Position x
+int py = 27;           // Position y
+const int pSize = 10;  // Breite/Höhe
+const int pSpeed = 2;  // Schritt pro Tastendruck
+
+// Objekt (z. B. "Münze")
+int ox = 80;           // Position x
+int oy = 30;           // Position y
+const int oW = 8;      // Breite
+const int oH = 8;      // Höhe
 
 void setup() {
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
   Serial.begin(9600);
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println("Fehler beim Initialisieren des Displays!");
-    for (;;);
+    Serial.println("Display-Init fehlgeschlagen!");
+    for(;;);
   }
-
   display.clearDisplay();
   display.display();
 }
 
 void loop() {
-  int state = digitalRead(BUTTON_PIN);
-
-  if (state == LOW) {
-    // --- KOLLISIONS-PRUEFUNG RECHTS ---
-    // neue x-Position, wenn wir uns bewegen würden
-    int neuerX = x + speed;
-
-    // Rand-Bedingungen (nur rechts nötig in dieser Aufgabe)
-    bool rechter_rand_wuerde_ueberschritten =
-      (neuerX + size) > SCREEN_WIDTH; // rechte Figurkante > 128?
-
-    // Nur bewegen, wenn wir im Bild bleiben
-    if (!rechter_rand_wuerde_ueberschritten) {
-      x = neuerX;
+  // --- Bewegung nach rechts (mit rechter Randbegrenzung) ---
+  if (digitalRead(BUTTON_PIN) == LOW) {
+    int neuerX = px + pSpeed;
+    if (neuerX + pSize <= SCREEN_WIDTH) {
+      px = neuerX;                 // nur bewegen, wenn im Bild
     } else {
-      // optional: exakt an den Rand "klemmen"
-      x = SCREEN_WIDTH - size;
+      px = SCREEN_WIDTH - pSize;   // am Rand stehen bleiben
     }
-
-    delay(50); // kleine Entprellpause
+    delay(40); // kleine Entprellpause
   }
 
-  // Zeichnen
+  // --- Kollision prüfen: AABB (Axis-Aligned Bounding Box) ---
+  bool getrennt =
+    (px + pSize <= ox) ||      // Spieler rechts vor Objekt links
+    (ox + oW <= px) ||         // Objekt rechts vor Spieler links
+    (py + pSize <= oy) ||      // Spieler unter Objekt
+    (oy + oH <= py);           // Objekt unter Spieler
+
+  bool kollidiert = !getrennt;
+
+  // --- Zeichnen ---
   display.clearDisplay();
-  display.fillRect(x, y, size, size, SSD1306_WHITE);
+
+  // Objekt
+  display.fillRect(ox, oy, oW, oH, SSD1306_WHITE);
+
+  // Spieler
+  display.fillRect(px, py, pSize, pSize, SSD1306_WHITE);
+
+  // Meldung bei Kollision
+  if (kollidiert) {
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(2, 2);
+    display.println("Treffer!");
+  }
+
   display.display();
 }
