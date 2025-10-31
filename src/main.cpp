@@ -1,32 +1,38 @@
 #include <Arduino.h>
 
-// LEDs
-const int led1 = 25;     // erste LED an GPIO25
-const int led2 = 26;     // zweite LED an GPIO26
+// LED an GPIO25
+const int ledPin = 25;
 
-// Button
-const int buttonPin = 33;  // Button an GPIO33 (zweites Bein an GND)
+// Button an GPIO33 (ein Bein an Pin, das andere an GND)
+const int buttonPin = 33;
+
+// Variablen für den Tasterzustand
+int lastState = HIGH;       // vorheriger Zustand (HIGH = nicht gedrückt)
+int currentState = HIGH;    // aktueller Zustand
+bool ledAn = false;         // merkt sich, ob die LED gerade an oder aus ist
 
 void setup() {
-  pinMode(led1, OUTPUT);
-  pinMode(led2, OUTPUT);
-
-  // interner Pull-Up-Widerstand aktiviert:
-  // → HIGH wenn nicht gedrückt, LOW wenn gedrückt
+  pinMode(ledPin, OUTPUT);
   pinMode(buttonPin, INPUT_PULLUP);
 }
 
 void loop() {
-  // Buttonzustand lesen
-  int buttonState = digitalRead(buttonPin);
+  // aktuellen Zustand des Buttons lesen
+  currentState = digitalRead(buttonPin);
 
-  if (buttonState == LOW) {
-    // gedrückt → LEDs an
-    digitalWrite(led1, HIGH);
-    digitalWrite(led2, HIGH);
-  } else {
-    // nicht gedrückt → LEDs aus
-    digitalWrite(led1, LOW);
-    digitalWrite(led2, LOW);
+  // prüfen, ob sich der Zustand geändert hat
+  if (currentState != lastState) {
+    // wenn der Button gerade gedrückt wurde (LOW)
+    if (currentState == LOW) {
+      // LED-Zustand umschalten
+      ledAn = !ledAn;
+      digitalWrite(ledPin, ledAn ? HIGH : LOW);
+    }
+
+    // kleine Pause zur Entprellung (Button prellt kurz beim Drücken)
+    delay(50);
   }
+
+  // aktuellen Zustand speichern, um ihn beim nächsten Durchlauf zu vergleichen
+  lastState = currentState;
 }
