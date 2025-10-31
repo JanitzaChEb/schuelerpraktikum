@@ -3,57 +3,89 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+// Display-Größe
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
+// Pins
 #define OLED_SDA 21
 #define OLED_SCL 22
+#define BUTTON_PIN 33
+#define LIGHT_PIN 32
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-// Ein kleines Beispiel-Bitmap (8x8 Pixel Herz)
-static const unsigned char PROGMEM herz_bild[] = {
-  0b00000000,
-  0b01100110,
-  0b11111111,
-  0b11111111,
-  0b01111110,
-  0b00111100,
-  0b00011000,
-  0b00000000
-};
+// Variablen
+int page = 0;                  // aktuelle Seite (0 = Willkommen, 1 = Lichtsensor)
+int lastButtonState = HIGH;    // vorheriger Buttonzustand
+int currentButtonState = HIGH; // aktueller Zustand
+
+void showWelcomePage() {
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(10, 25);
+  display.println("Hallo!");
+  display.display();
+}
+
+void showLightPage() {
+  int sensorWert = analogRead(LIGHT_PIN);
+  int helligkeit = map(sensorWert, 0, 4095, 0, 100);
+  if (helligkeit < 0) helligkeit = 0;
+  if (helligkeit > 100) helligkeit = 100;
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 10);
+  display.println("Lichtsensor:");
+  display.setTextSize(2);
+  display.setCursor(10, 30);
+  display.print(helligkeit);
+  display.println("%");
+  display.display();
+}
 
 void setup() {
   Serial.begin(9600);
-  
+
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println("Fehler beim Initialisieren des Displays!");
     for(;;);
   }
 
   display.clearDisplay();
-
-  // --- 1️⃣ Text ---
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
-  display.println("Display Test");
-
-  // --- 2️⃣ Linie ---
-  display.drawLine(0, 12, 127, 12, SSD1306_WHITE);
-
-  // --- 3️⃣ Rechtecke & Kreise ---
-  display.drawRect(5, 20, 30, 20, SSD1306_WHITE);  // Rahmen
-  display.fillRect(10, 25, 20, 10, SSD1306_WHITE); // gefülltes Rechteck
-  display.drawCircle(70, 30, 10, SSD1306_WHITE);   // Kreisrahmen
-  display.fillCircle(100, 30, 10, SSD1306_WHITE);  // gefüllter Kreis
-
-  // --- 4️⃣ Bitmap ---
-  display.drawBitmap(58, 48, herz_bild, 8, 8, SSD1306_WHITE);
-
-  display.display();
+  showWelcomePage();
 }
 
 void loop() {
-  // Hier passiert nichts weiter
+  currentButtonState = digitalRead(BUTTON_PIN);
+
+  // Wenn der Button gerade gedrückt wurde (von HIGH -> LOW)
+  if (currentButtonState == LOW && lastButtonState == HIGH) {
+    page++;           // zur nächsten Seite wechseln
+    if (page > 1) {   // nur zwei Seiten → zurück zu 0
+      page = 0;
+    }
+
+    // Anzeige je nach Seite aktualisieren
+    if (page == 0) {
+      showWelcomePage();
+    } else if (page == 1) {
+      showLightPage();
+    }
+
+    delay(200); // kleine Pause gegen Prellen
+  }
+
+  lastButtonState = currentButtonState;
+
+  // Wenn wir auf der Lichtsensor-Seite sind, regelmäßig aktualisieren
+  if (page == 1) {
+    showLightPage();
+    delay(500);
+  }
 }
