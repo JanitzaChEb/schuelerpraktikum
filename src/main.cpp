@@ -10,20 +10,14 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // Pins
 #define BUTTON_PIN 33
-#define OLED_SDA 21
-#define OLED_SCL 22
 
-// Spieler (Quadrat)
-int px = 0;            // Position x
-int py = 27;           // Position y
-const int pSize = 10;  // Breite/Höhe
-const int pSpeed = 2;  // Schritt pro Tastendruck
-
-// Objekt (z. B. "Münze")
-int ox = 80;           // Position x
-int oy = 30;           // Position y
-const int oW = 8;      // Breite
-const int oH = 8;      // Höhe
+// Spielfigur
+float x = 20;        // x-Position (fix)
+float y = 20;        // Startposition y
+float vy = 0;        // vertikale Geschwindigkeit
+const float g = 0.4; // "Gravitation" (je größer, desto schneller fällt die Figur)
+const float jump = -5.0; // Geschwindigkeit beim Sprung (negativ = nach oben)
+const int size = 10;     // Größe der Figur
 
 void setup() {
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -33,47 +27,35 @@ void setup() {
     Serial.println("Display-Init fehlgeschlagen!");
     for(;;);
   }
+
   display.clearDisplay();
   display.display();
 }
 
 void loop() {
-  // --- Bewegung nach rechts (mit rechter Randbegrenzung) ---
+  // --- Eingabe ---
   if (digitalRead(BUTTON_PIN) == LOW) {
-    int neuerX = px + pSpeed;
-    if (neuerX + pSize <= SCREEN_WIDTH) {
-      px = neuerX;                 // nur bewegen, wenn im Bild
-    } else {
-      px = SCREEN_WIDTH - pSize;   // am Rand stehen bleiben
-    }
-    delay(40); // kleine Entprellpause
+    vy = jump; // "Sprung" = Anfangsgeschwindigkeit nach oben
   }
 
-  // --- Kollision prüfen: AABB (Axis-Aligned Bounding Box) ---
-  bool getrennt =
-    (px + pSize <= ox) ||      // Spieler rechts vor Objekt links
-    (ox + oW <= px) ||         // Objekt rechts vor Spieler links
-    (py + pSize <= oy) ||      // Spieler unter Objekt
-    (oy + oH <= py);           // Objekt unter Spieler
+  // --- Physik: Bewegung unter Schwerkraft ---
+  vy = vy + g;   // Beschleunigung nach unten
+  y = y + vy;    // neue Position
 
-  bool kollidiert = !getrennt;
+  // --- Begrenzung: nicht aus dem Display fallen ---
+  if (y + size >= SCREEN_HEIGHT) {
+    y = SCREEN_HEIGHT - size;
+    vy = 0; // auf dem Boden stoppen
+  }
+  if (y < 0) {
+    y = 0;
+    vy = 0; // nicht über den oberen Rand
+  }
 
   // --- Zeichnen ---
   display.clearDisplay();
-
-  // Objekt
-  display.fillRect(ox, oy, oW, oH, SSD1306_WHITE);
-
-  // Spieler
-  display.fillRect(px, py, pSize, pSize, SSD1306_WHITE);
-
-  // Meldung bei Kollision
-  if (kollidiert) {
-    display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(2, 2);
-    display.println("Treffer!");
-  }
-
+  display.fillRect((int)x, (int)y, size, size, SSD1306_WHITE);
   display.display();
+
+  delay(30); // Frame-Rate (ca. 30 ms = ~33 FPS)
 }
