@@ -1,43 +1,32 @@
 #include <Arduino.h>
 
-// LEDs an GPIO25 und GPIO26
-int led1 = 25;
-int led2 = 26;
+// LEDs
+const int led1 = 25;     // erste LED an GPIO25
+const int led2 = 26;     // zweite LED an GPIO26
 
-// Blinkgeschwindigkeiten (in Millisekunden)
-int interval1 = 500;   // LED1 wechselt alle 0,5 Sekunden
-int interval2 = 300;   // LED2 wechselt alle 0,3 Sekunden
-
-// Variablen, um zu speichern, wann zuletzt geschaltet wurde
-unsigned long letzteZeit1 = 0;
-unsigned long letzteZeit2 = 0;
-
-// Zustände der LEDs (an/aus)
-bool led1An = false;
-bool led2An = false;
+// Button
+const int buttonPin = 33;  // Button an GPIO33 (zweites Bein an GND)
 
 void setup() {
   pinMode(led1, OUTPUT);
   pinMode(led2, OUTPUT);
+
+  // interner Pull-Up-Widerstand aktiviert:
+  // → HIGH wenn nicht gedrückt, LOW wenn gedrückt
+  pinMode(buttonPin, INPUT_PULLUP);
 }
 
 void loop() {
-  // aktuelle Zeit merken
-  unsigned long jetzt = millis();
+  // Buttonzustand lesen
+  int buttonState = digitalRead(buttonPin);
 
-  // --- LED1 prüfen ---
-  if (jetzt - letzteZeit1 >= interval1) {
-    // Zustand umschalten
-    led1An = !led1An;
-    digitalWrite(led1, led1An ? HIGH : LOW);
-    // Zeit merken
-    letzteZeit1 = jetzt;
-  }
-
-  // --- LED2 prüfen ---
-  if (jetzt - letzteZeit2 >= interval2) {
-    led2An = !led2An;
-    digitalWrite(led2, led2An ? HIGH : LOW);
-    letzteZeit2 = jetzt;
+  if (buttonState == LOW) {
+    // gedrückt → LEDs an
+    digitalWrite(led1, HIGH);
+    digitalWrite(led2, HIGH);
+  } else {
+    // nicht gedrückt → LEDs aus
+    digitalWrite(led1, LOW);
+    digitalWrite(led2, LOW);
   }
 }
