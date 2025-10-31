@@ -1,19 +1,23 @@
 #include <Arduino.h>
 
-// LED ist an GPIO25 angeschlossen
-int ledPin = 25;
+// LED1 an GPIO25, LED2 an GPIO26 angeschlossen
+int led1 = 25;
+int led2 = 26;
 
 void setup() {
-  // Pin als Ausgang festlegen
-  pinMode(ledPin, OUTPUT);
+  // Beide Pins als Ausgänge einstellen
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
 }
 
 void loop() {
-  // LED einschalten
-  digitalWrite(ledPin, HIGH);
-  delay(500);  // warte 500 Millisekunden (0,5 Sekunden)
+  // Erste LED an, zweite LED aus
+  digitalWrite(led1, HIGH);
+  digitalWrite(led2, LOW);
+  delay(500);  // kurze Pause
 
-  // LED ausschalten
-  digitalWrite(ledPin, LOW);
-  delay(500);  // wieder 0,5 Sekunden warten
+  // Erste LED aus, zweite LED an
+  digitalWrite(led1, LOW);
+  digitalWrite(led2, HIGH);
+  delay(500);  // gleiche Pause
 }
