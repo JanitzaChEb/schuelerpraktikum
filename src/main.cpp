@@ -3,38 +3,55 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-// Displaygröße (Standard für 0.96" SSD1306)
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 
-// I²C-Pins am ESP32
 #define OLED_SDA 21
 #define OLED_SCL 22
 
-// Displayobjekt anlegen
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-void setup() {
-  // Serielle Schnittstelle zum Debuggen
-  Serial.begin(9600);
+// Ein kleines Beispiel-Bitmap (8x8 Pixel Herz)
+static const unsigned char PROGMEM herz_bild[] = {
+  0b00000000,
+  0b01100110,
+  0b11111111,
+  0b11111111,
+  0b01111110,
+  0b00111100,
+  0b00011000,
+  0b00000000
+};
 
-  // Display initialisieren
+void setup() {
+  Serial.begin(9600);
+  
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println("Fehler beim Initialisieren des Displays!");
-    for(;;); // stoppt das Programm, falls kein Display gefunden
+    for(;;);
   }
 
-  // Bildschirm löschen
   display.clearDisplay();
 
-  // Text-Einstellungen
-  display.setTextSize(2);             // Schriftgröße
-  display.setTextColor(SSD1306_WHITE);// Farbe (nur Weiß beim OLED)
-  display.setCursor(10, 25);          // Position (x, y)
+  // --- 1️⃣ Text ---
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("Display Test");
 
-  // Text ausgeben
-  display.println("Hallo!");
-  display.display();                  // Anzeige aktualisieren
+  // --- 2️⃣ Linie ---
+  display.drawLine(0, 12, 127, 12, SSD1306_WHITE);
+
+  // --- 3️⃣ Rechtecke & Kreise ---
+  display.drawRect(5, 20, 30, 20, SSD1306_WHITE);  // Rahmen
+  display.fillRect(10, 25, 20, 10, SSD1306_WHITE); // gefülltes Rechteck
+  display.drawCircle(70, 30, 10, SSD1306_WHITE);   // Kreisrahmen
+  display.fillCircle(100, 30, 10, SSD1306_WHITE);  // gefüllter Kreis
+
+  // --- 4️⃣ Bitmap ---
+  display.drawBitmap(58, 48, herz_bild, 8, 8, SSD1306_WHITE);
+
+  display.display();
 }
 
 void loop() {
