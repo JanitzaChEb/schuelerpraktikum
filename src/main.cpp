@@ -3,10 +3,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
-// === WLAN-Zugangsdaten ===
-const char* ssid     = "WLAN / Hotspot Name";
-const char* password = "Passwort";
+#include "wifi_credentials.h"  // <--- WLAN-Daten von externer Datei einbinden
 
 // === Display-Setup ===
 #define SCREEN_WIDTH 128
@@ -27,8 +24,8 @@ void setup() {
 
   // WLAN-Verbindung starten
   Serial.print("Verbinde mit WLAN: ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  Serial.println(WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   // Warten bis verbunden
   int versuch = 0;
